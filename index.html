@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Remesas</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --card: #20243a;
+    --border: #2e3350;
+    --accent: #4f8ef7;
+    --accent2: #7c5cfc;
+    --green: #22d47a;
+    --gold: #f5c842;
+    --text: #e8eaf0;
+    --muted: #7a7f9a;
+    --red: #f25f5c;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 16px;
+  }
+
+  header {
+    text-align: center;
+    padding: 20px 0 24px;
+  }
+
+  header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 4px;
+  }
+
+  .date-badge {
+    display: inline-block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 8px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* PRECIOS DEL DÍA */
+  .prices-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .inputs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .input-group label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .flag { font-size: 14px; }
+
+  .input-group input {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+
+  .input-group input:focus {
+    border-color: var(--accent);
+  }
+
+  .input-group input::placeholder {
+    color: var(--border);
+  }
+
+  /* BOTÓN CALCULAR */
+  .btn-calc {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    color: white;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    margin-bottom: 16px;
+    letter-spacing: 0.3px;
+    transition: opacity 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn-calc:active { opacity: 0.85; }
+
+  /* RESULTADOS */
+  .results-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .result-card.highlight {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, #1a2240, #1a1d27);
+  }
+
+  .result-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+  }
+
+  .result-route {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .result-formula {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .result-tag {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 2px 7px;
+    border-radius: 20px;
+    background: var(--card);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .result-tag.pct-3 {
+    background: #0f2d1a;
+    color: var(--green);
+    border-color: #1a5c35;
+  }
+
+  .result-tag.pct-10 {
+    background: #261a0f;
+    color: var(--gold);
+    border-color: #5c3d10;
+  }
+
+  .result-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--green);
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .result-value.empty {
+    color: var(--border);
+    font-size: 14px;
+  }
+
+  /* STEPS */
+  .steps-detail {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-top: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 1.8;
+    display: none;
+  }
+
+  .steps-detail.show { display: block; }
+
+  .steps-detail span.val { color: var(--accent); }
+
+  /* TOGGLE DETAIL */
+  .toggle-detail {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 10px;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 4px;
+    font-family: 'Inter', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* COPY BTN */
+  .copy-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .copy-btn:active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* DIVIDER */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 16px 0;
+  }
+
+  .section-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: var(--green);
+    color: #0a1a10;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 13px;
+    transition: transform 0.3s ease;
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💸 Calculadora de Remesas</h1>
+  <p>Bs · PEN · COP</p>
+  <div class="date-badge" id="dateBadge"></div>
+</header>
+
+<!-- PRECIOS BYBIT -->
+<div class="prices-section">
+  <div class="section-label">📊 Precios del día (Bybit)</div>
+  <div class="inputs-grid">
+    <div class="input-group">
+      <label><span class="flag">🇻🇪</span> Bs venta (USD→Bs)</label>
+      <input type="number" id="bsVenta" placeholder="798" inputmode="decimal">
+    </div>
+    <div class="input-group">
+      <label><span class="flag">🇻🇪</span> Bs compra (Bs→USD)</label>
+      <input type="number" id="bsCompra" placeholder="751" inputmode="decimal">
+    </div>
+    <div class="input-group">
+      <label><span class="flag">🇵🇪</span> PEN venta (USD→PEN)</label>
+      <input type="number" id="penVenta" placeholder="3.43" inputmode="decimal">
+    </div>
+    <div class="input-group">
+      <label><span class="flag">🇵🇪</span> PEN compra (PEN→USD)</label>
+      <input type="number" id="penCompra" placeholder="3.41" inputmode="decimal">
+    </div>
+    <div class="input-group">
+      <label><span class="flag">🇨🇴</span> COP venta (USD→COP)</label>
+      <input type="number" id="copVenta" placeholder="3,527" inputmode="decimal">
+    </div>
+    <div class="input-group">
+      <label><span class="flag">🇨🇴</span> COP compra (COP→USD)</label>
+      <input type="number" id="copCompra" placeholder="3,426" inputmode="decimal">
+    </div>
+  </div>
+</div>
+
+<button class="btn-calc" onclick="calcular()">⚡ Calcular tasas</button>
+
+<!-- RESULTADOS -->
+<div class="results-grid" id="resultsGrid">
+  <!-- se llena con JS -->
+</div>
+
+<div id="copyArea" style="display:none;">
+  <hr class="divider">
+  <button class="copy-btn" onclick="copiarTasas()">📋 Copiar tasas para WhatsApp</button>
+</div>
+
+<div class="toast" id="toast">✅ ¡Copiado!</div>
+
+<script>
+  // Fecha
+  const now = new Date();
+  const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+  document.getElementById('dateBadge').textContent = now.toLocaleDateString('es-ES', opts);
+
+  let lastResults = null;
+
+  function fmt(n, dec=3) {
+    if (isNaN(n)) return '—';
+    return n.toFixed(dec);
+  }
+
+  function calcular() {
+    const bsV   = parseFloat(document.getElementById('bsVenta').value);
+    const bsC   = parseFloat(document.getElementById('bsCompra').value);
+    const penV  = parseFloat(document.getElementById('penVenta').value);
+    const penC  = parseFloat(document.getElementById('penCompra').value);
+    const copV  = parseFloat(document.getElementById('copVenta').value);
+    const copC  = parseFloat(document.getElementById('copCompra').value);
+
+    // Rutas y fórmulas
+    // 1. PEN → Bs (de Perú a Venezuela): bsVenta / penCompra - 3%
+    const penToBs_base = bsV / penC;
+    const penToBs      = penToBs_base * 0.97;
+
+    // 2. Bs → PEN (de Venezuela a Perú): PEN venta / Bs compra - 10%
+    const bsToPen_base = penV / bsC;
+    const bsToPen      = bsToPen_base * 0.90;
+
+    // 3. PEN → COP: copVenta / penCompra - 10%
+    const penToCop_base = copV / penC;
+    const penToCop      = penToCop_base * 0.90;
+
+    // 4. COP → PEN: penVenta / copCompra - 10%
+    const copToPen_base = penV / copC;
+    const copToPen      = copToPen_base * 0.90;
+
+    // 5. Bs → COP: copVenta / bsCompra - 10%
+    const bsToCop_base = copV / bsC;
+    const bsToCop      = bsToCop_base * 0.90;
+
+    // 6. COP → Bs: bsVenta / copCompra - 10%
+    const copToBs_base = bsV / copC;
+    const copToBs      = copToBs_base * 0.90;
+
+    // 7. PEN → USD: 1/penCompra * 0.90
+    const penToUsd_base = 1 / penC;
+    const penToUsd      = penToUsd_base * 0.90;
+
+    // 8. USD → PEN: penVenta * 0.97
+    const usdToPen = penV * 0.97;
+
+    lastResults = {
+      penToBs, bsToPen, penToCop, copToPen, bsToCop, copToBs,
+      bsV, bsC, penV, penC, copV, copC,
+      penToBs_base, bsToPen_base, penToCop_base, copToPen_base, bsToCop_base, copToBs_base
+    };
+
+    const grid = document.getElementById('resultsGrid');
+    grid.innerHTML = '';
+
+    const tasas = [
+      {
+        id: 'penToBs',
+        route: '🇵🇪 PEN → Bs 🇻🇪',
+        value: isNaN(penToBs) ? null : penToBs,
+        pct: 3,
+        dec: 2,
+        formula: `${fmt(bsV,2)} ÷ ${fmt(penC,3)} = ${fmt(penToBs_base,3)} − 3%`,
+        unit: 'Bs por Sol'
+      },
+      {
+        id: 'bsToPen',
+        route: '🇻🇪 Bs → PEN 🇵🇪',
+        value: isNaN(bsToPen) ? null : bsToPen,
+        pct: 10,
+        dec: 5,
+        formula: `${fmt(penV,3)} ÷ ${fmt(bsC,2)} = ${fmt(bsToPen_base,5)} − 10%`,
+        unit: 'PEN por Bs'
+      },
+      {
+        id: 'penToCop',
+        route: '🇵🇪 PEN → COP 🇨🇴',
+        value: isNaN(penToCop) ? null : penToCop,
+        pct: 10,
+        dec: 2,
+        formula: `${fmt(copV,2)} ÷ ${fmt(penC,3)} = ${fmt(penToCop_base,3)} − 10%`,
+        unit: 'COP por Sol'
+      },
+      {
+        id: 'bsToCop',
+        route: '🇻🇪 Bs → COP 🇨🇴',
+        value: isNaN(bsToCop) ? null : bsToCop,
+        pct: 10,
+        dec: 3,
+        formula: `${fmt(copV,2)} ÷ ${fmt(bsC,2)} = ${fmt(bsToCop_base,4)} − 10%`,
+        unit: 'COP por Bs'
+      },
+    ];
+
+    tasas.forEach(t => {
+      const card = document.createElement('div');
+      card.className = 'result-card' + (t.pct === 3 ? ' highlight' : '');
+
+      const valStr = t.value !== null ? fmt(t.value, t.dec) : '—';
+      const valClass = t.value !== null ? '' : 'empty';
+
+      card.innerHTML = `
+        <div class="result-info">
+          <div class="result-route">${t.route}</div>
+          <div class="result-formula">${t.formula}</div>
+          <button class="toggle-detail" onclick="toggleDetail('${t.id}')">▸ ver pasos</button>
+          <div class="steps-detail" id="steps-${t.id}">
+            Paso 1: ${t.formula.split('=')[0].trim()} = <span class="val">${fmt(t.value !== null ? t.value/(1 - t.pct/100) : 0, t.dec+2)}</span><br>
+            Paso 2: resultado × ${t.pct === 3 ? '0.97' : '0.90'} = <span class="val">${valStr}</span><br>
+            Tasa final: <span class="val">${valStr} ${t.unit}</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <div class="result-value ${valClass}">${valStr}</div>
+          <div class="result-tag ${t.pct === 3 ? 'pct-3' : 'pct-10'}">−${t.pct}%</div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    document.getElementById('copyArea').style.display = 'block';
+    grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function toggleDetail(id) {
+    const el = document.getElementById('steps-' + id);
+    const btn = el.previousElementSibling;
+    const isOpen = el.classList.toggle('show');
+    btn.textContent = isOpen ? '▾ ocultar pasos' : '▸ ver pasos';
+  }
+
+  function copiarTasas() {
+    if (!lastResults) return;
+    const r = lastResults;
+    const d = new Date().toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit', year:'numeric'});
+
+    const lineas = [
+      `📊 Tasas del día ${d}`,
+      ``,
+      `🇻🇪 Bs venta: ${r.bsV} | Bs compra: ${r.bsC}`,
+      `🇵🇪 PEN venta: ${r.penV} | PEN compra: ${r.penC}`,
+      `🇨🇴 COP venta: ${r.copV} | COP compra: ${r.copC}`,
+      ``,
+      `💱 MIS TASAS`,
+      `🇵🇪→🇻🇪 PEN a Bs: ${fmt(r.penToBs,2)} Bs por Sol`,
+      `🇻🇪→🇵🇪 Bs a PEN: ${fmt(r.bsToPen,5)} PEN por Bs`,
+      `🇵🇪→🇨🇴 PEN a COP: ${fmt(r.penToCop,2)} COP por Sol`,
+      `🇻🇪→🇨🇴 Bs a COP: ${fmt(r.bsToCop,3)} COP por Bs`,
+    ].join('\n');
+
+    navigator.clipboard.writeText(lineas).then(() => {
+      showToast();
+    }).catch(() => {
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = lineas;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast();
+    });
+  }
+
+  function showToast() {
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+</script>
+</body>
+</html>
