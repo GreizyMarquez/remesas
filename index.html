@@ -615,8 +615,9 @@
   let lastResults = null;
 
   function fmt(n, dec=3) {
-    if (isNaN(n)) return '—';
-    return n.toFixed(dec);
+    const num = Number(n);
+    if (n === '' || n === null || n === undefined || isNaN(num)) return '—';
+    return num.toFixed(dec);
   }
 
   function calcular() {
@@ -1179,20 +1180,25 @@
     const boxHist = document.getElementById('opListaHistorial');
     const abierto = btn.textContent.trim().startsWith('▾');
     btn.textContent = (abierto ? '▾' : '▸') + ` ver historial completo (${historial.length})`;
-    boxHist.innerHTML = grupos.length
-      ? grupos.map(g => `
-          <div>
-            <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.5px;margin:2px 0 6px;">
-              ${fechaBonita(g.fecha)} · ${g.ops.length} remesa${g.ops.length === 1 ? '' : 's'} · <span style="color:var(--green)">≈ ${fmt(gananciaTotal(g.ops),2)} USDT</span>
+    try {
+      boxHist.innerHTML = grupos.length
+        ? grupos.map(g => `
+            <div>
+              <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.5px;margin:2px 0 6px;">
+                ${fechaBonita(g.fecha)} · ${g.ops.length} remesa${g.ops.length === 1 ? '' : 's'} · <span style="color:var(--green)">≈ ${fmt(gananciaTotal(g.ops),2)} USDT</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
+                ${g.ops.map(tarjetaOperacion).join('')}
+              </div>
             </div>
-            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
-              ${g.ops.map(tarjetaOperacion).join('')}
-            </div>
-          </div>
-        `).join('')
-      : '<div style="font-size:11px;color:var(--muted)">Sin remesas de días anteriores.</div>';
-    renderCierreDia();
-    renderDashboardGanancias();
+          `).join('')
+        : '<div style="font-size:11px;color:var(--muted)">Sin remesas de días anteriores.</div>';
+    } catch (e) {
+      console.error('No se pudo mostrar el historial completo:', e);
+      boxHist.innerHTML = '<div style="font-size:11px;color:var(--muted)">No se pudo mostrar parte del historial (hay datos antiguos con formato raro). El resto de la app sigue funcionando normal.</div>';
+    }
+    try { renderCierreDia(); } catch (e) { console.error('Error en renderCierreDia:', e); }
+    try { renderDashboardGanancias(); } catch (e) { console.error('Error en renderDashboardGanancias:', e); }
   }
 
   function toggleHistorialOps() {
